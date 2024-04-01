@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/estryaog/changelog/internal/handler"
 	"github.com/estryaog/changelog/internal/types"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
@@ -44,12 +44,12 @@ func (s *Server) Register(ctx *gin.Context) {
 	}
 
 	user := &types.User{
-		Id: uuid.New().String(),
-		Email:    reqBody.Email,
+		Id:      uuid.New().String(),
+		Email:   reqBody.Email,
 		IsAdmin: false,
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashedPassword, err := handler.HashPassword(reqBody.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -88,19 +88,39 @@ func (s *Server) Login(ctx *gin.Context) {
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(user.Password))
+	err = handler.CompareHashAndPassword(existingUser.Password, user.Password)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, existingUser)
+	token, err := handler.CreateJWT(existingUser.Id, existingUser.IsAdmin)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"token": token})
 }
 
 func (s *Server) Me(ctx *gin.Context) {
-	/*
-	 * ToDo: Implement logic to get the current user from the jwt token
-	 */
+	tokenString := ctx.GetHeader("Authorization")
+	if tokenString == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
+		return
+	}
 
-	ctx.JSON(http.StatusOK, "implement logic")
+	claims, err := handler.ValidateJWT(tokenString)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := s.UserStore.GetUser(ctx, claims.Id)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, user)
 }
