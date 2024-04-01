@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+
+	store "github.com/estryaog/changelog/database"
 )
 
 type Service interface {
@@ -27,6 +29,9 @@ func New() Service {
 	if err != nil {
 		panic(err)
 	}
+
+	store.NewPostgresUserStore(db)
+
 	s := &service{db: db}
 	return s
 }
