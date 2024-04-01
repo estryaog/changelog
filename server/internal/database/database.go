@@ -4,14 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-
-	store "github.com/estryaog/changelog/database"
 )
 
 type Service interface {
+	GetDB() *sql.DB
 }
 
-type service struct {
+type ServiceImpl struct {
 	db *sql.DB
 }
 
@@ -23,15 +22,16 @@ var (
 	host     = os.Getenv("PSQL_HOST")
 )
 
-func New() Service {
+func New() *ServiceImpl {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, host, port, database)
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
 		panic(err)
 	}
 
-	store.NewPostgresUserStore(db)
+	return &ServiceImpl{db: db}
+}
 
-	s := &service{db: db}
-	return s
+func (s *ServiceImpl) GetDB() *sql.DB {
+	return s.db
 }
