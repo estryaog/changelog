@@ -24,4 +24,9 @@ var (
 func New() Service {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, host, port, database)
 	db, err := sql.Open("pgx", connStr)
+	if err != nil {
+		panic(err)
+	}
+	s := &service{db: db}
+	return s
 }
