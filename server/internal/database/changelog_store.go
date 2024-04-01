@@ -12,7 +12,7 @@ type ChangelogStore interface {
 	DeleteChangelog(ctx *gin.Context, id string) error
 	UpdateChangelog(ctx *gin.Context, id string, changelog *types.Changelog) (*types.Changelog, error)
 	GetChangelog(ctx *gin.Context, id string) (*types.Changelog, error)
-	GetChangelogs(ctx *gin.Context) ([]*types.Changelog, error)
+	GetChangelogs(ctx *gin.Context, limit int, orderBy string) ([]*types.Changelog, error)
 }
 
 type PostgresChangelogsStore struct {
@@ -65,9 +65,9 @@ func (db PostgresChangelogsStore) GetChangelog(ctx *gin.Context, id string) (*ty
 	return changelog, nil
 }
 
-func (db PostgresChangelogsStore) GetChangelogs(ctx *gin.Context) ([]*types.Changelog, error) {
-	query := `SELECT id, version, content, created_at FROM changelogs`
-	rows, err := db.db.QueryContext(ctx, query)
+func (db PostgresChangelogsStore) GetChangelogs(ctx *gin.Context, limit int, orderBy string) ([]*types.Changelog, error) {
+	query := `SELECT id, version, content, created_at FROM changelogs ORDER BY $1 DESC LIMIT $2`
+	rows, err := db.db.QueryContext(ctx, query, orderBy, limit)
 	if err != nil {
 		return nil, err
 	}
