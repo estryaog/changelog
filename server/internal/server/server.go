@@ -11,19 +11,21 @@ import (
 
 type Server struct {
 	port int
-	db   database.Service
+	db   *database.ServiceImpl
+	UserStore database.UserStore
 }
 
-func NewServer() *http.Server {
+func NewServer(db *database.ServiceImpl) *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	NewServer := &Server{
-		port: port,
-		db:   database.New(),
+	newServer := &Server{
+		port:      port,
+		db:        db,
+		UserStore: database.NewPostgresUserStore(db),
 	}
 
 	server := &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
-		Handler:      NewServer.RegisterRoutes(),
+		Handler:      newServer.RegisterRoutes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
