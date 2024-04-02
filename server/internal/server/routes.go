@@ -50,6 +50,17 @@ func (s *Server) Register(ctx *gin.Context) {
 
 	user.Password = string(hashedPassword)
 
+	emailExists, err := s.db.IsKeyValueExist("users", "email", user.Email)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if emailExists {
+		ctx.JSON(http.StatusConflict, gin.H{"error": "email already exists"})
+		return
+	}
+
 	createdUser, err := s.UserStore.CreateUser(ctx, user)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

@@ -35,6 +35,13 @@ func New() *ServiceImpl {
 	return &ServiceImpl{db: db}
 }
 
-func (s *ServiceImpl) GetDB() *sql.DB {
-	return s.db
+func (s *ServiceImpl) IsKeyValueExist(table, key, value string) (bool, error) {
+	query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = $1)", table, key)
+	var exists bool
+	err := s.db.QueryRow(query, value).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }
