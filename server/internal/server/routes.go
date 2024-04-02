@@ -33,23 +33,16 @@ func configureCors(r *gin.Engine) {
 }
 
 func (s *Server) Register(ctx *gin.Context) {
-	var reqBody struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
-	if reqBody.Email == "" || reqBody.Password == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "email and password are required"})
+	var user *types.User
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid json request"})
 		return
 	}
 
-	user := &types.User{
-		Id:      uuid.New().String(),
-		Email:   reqBody.Email,
-		IsAdmin: false,
-	}
+	user.Id = uuid.New().String()
+	user.IsAdmin = false
 
-	hashedPassword, err := handler.HashPassword(reqBody.Password)
+	hashedPassword, err := handler.HashPassword(user.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -67,19 +60,10 @@ func (s *Server) Register(ctx *gin.Context) {
 }
 
 func (s *Server) Login(ctx *gin.Context) {
-	var reqBody struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
-	if reqBody.Email == "" || reqBody.Password == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "email and password are required"})
+	var user *types.User
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid json request"})
 		return
-	}
-
-	user := &types.User{
-		Email:    reqBody.Email,
-		Password: reqBody.Password,
 	}
 
 	existingUser, err := s.UserStore.GetUser(ctx, "email", user.Email)
