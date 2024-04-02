@@ -82,9 +82,9 @@ func (s *Server) Login(ctx *gin.Context) {
 		Password: reqBody.Password,
 	}
 
-	existingUser, err := s.UserStore.GetUser(ctx, user.Email)
+	existingUser, err := s.UserStore.GetUser(ctx, "email", user.Email)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "We couldn't find an account with that email address"})
 		return
 	}
 
@@ -116,9 +116,9 @@ func (s *Server) Me(ctx *gin.Context) {
 		return
 	}
 
-	user, err := s.UserStore.GetUser(ctx, claims.Id)
+	user, err := s.UserStore.GetUser(ctx, "id", claims.Id)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "We couldn't find an account with that id"})
 		return
 	}
 

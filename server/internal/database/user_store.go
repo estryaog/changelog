@@ -10,7 +10,7 @@ import (
 type UserStore interface {
 	CreateUser(ctx *gin.Context, user *types.User) (*types.User, error)
 	DeleteUser(ctx *gin.Context, id string) error
-	GetUser(ctx *gin.Context, id string) (*types.User, error)
+	GetUser(ctx *gin.Context, key, value string) (*types.User, error)
 }
 
 type PostgresUsersStore struct {
@@ -41,10 +41,10 @@ func (db PostgresUsersStore) DeleteUser(ctx *gin.Context, id string) error {
 	return nil
 }
 
-func (db PostgresUsersStore) GetUser(ctx *gin.Context, id string) (*types.User, error) {
-	query := `SELECT id, email, password, is_admin FROM users WHERE id = $1`
+func (db PostgresUsersStore) GetUser(ctx *gin.Context, key, value string) (*types.User, error) {
+	query := `SELECT id, email, password, is_admin FROM users WHERE $1 = $2`
 	user := &types.User{}
-	err := db.db.QueryRowContext(ctx, query, id).Scan(&user.Id, &user.Email, &user.Password, &user.IsAdmin)
+	err := db.db.QueryRowContext(ctx, query, key, value).Scan(&user.Id, &user.Email, &user.Password, &user.IsAdmin)
 	if err != nil {
 		return nil, err
 	}
