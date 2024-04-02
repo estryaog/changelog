@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -43,6 +44,10 @@ func CreateJWT(id string, isAdmin bool) (string, error) {
 }
 
 func ValidateJWT(tokenString string) (*types.JWTClaims, error) {
+	if len(tokenString) <= 7 {
+		return nil, errors.New("invalid token")
+	}
+
 	tokenString = tokenString[7:]
 	token, err := jwt.ParseWithClaims(tokenString, &types.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
@@ -53,7 +58,7 @@ func ValidateJWT(tokenString string) (*types.JWTClaims, error) {
 
 	claims, ok := token.Claims.(*types.JWTClaims)
 	if !ok || !token.Valid {
-		return nil, err
+		return nil, errors.New("invalid token")
 	}
 
 	return claims, nil
