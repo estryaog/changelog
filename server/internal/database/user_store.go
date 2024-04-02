@@ -22,8 +22,8 @@ func NewPostgresUserStore(db *ServiceImpl) UserStore {
 }
 
 func (db PostgresUsersStore) CreateUser(ctx *gin.Context, user *types.User) (*types.User, error) {
-	query := `INSERT INTO users (email, password, is_admin) VALUES ($1, $2, $3) RETURNING id`
-	err := db.db.QueryRowContext(ctx, query, user.Email, user.Password, user.IsAdmin).Scan(&user.Id)
+	query := `INSERT INTO users (id, email, password, is_admin) VALUES ($1, $2, $3, $4) RETURNING id`
+	err := db.db.QueryRowContext(ctx, query, user.Id, user.Email, user.Password, user.IsAdmin).Scan(&user.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -42,9 +42,9 @@ func (db PostgresUsersStore) DeleteUser(ctx *gin.Context, id string) error {
 }
 
 func (db PostgresUsersStore) GetUser(ctx *gin.Context, key, value string) (*types.User, error) {
-	query := `SELECT id, email, password, is_admin FROM users WHERE $1 = $2`
+	query := `SELECT id, email, password, is_admin FROM users WHERE ` + key + ` = $1`
 	user := &types.User{}
-	err := db.db.QueryRowContext(ctx, query, key, value).Scan(&user.Id, &user.Email, &user.Password, &user.IsAdmin)
+	err := db.db.QueryRowContext(ctx, query, value).Scan(&user.Id, &user.Email, &user.Password, &user.IsAdmin)
 	if err != nil {
 		return nil, err
 	}
