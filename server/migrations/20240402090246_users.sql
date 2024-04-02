@@ -10,7 +10,6 @@ CREATE TABLE users (
     is_admin BOOLEAN NOT NULL DEFAULT false
 );
 
-
 -- +goose Down
 -- +goose StatementBegin
 SELECT 'down SQL query';
