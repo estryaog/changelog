@@ -3,6 +3,7 @@ version: '3.8'
 services:
   psql:
     image: postgres:latest
+    container_name: postgresql_changelog
     environment:
       POSTGRES_DB: ${PSQL_DATABASE}
       POSTGRES_USER: ${PSQL_USERNAME}
@@ -10,7 +11,7 @@ services:
     ports:
       - "${PSQL_PORT}:5432"
     volumes:
-      - psql_volume:/var/lib/postgresql/data
+      - postgresql_changelog_volume:/var/lib/postgresql/data
 
 volumes:
-  psql_volume:
+  postgresql_changelog_volume:
